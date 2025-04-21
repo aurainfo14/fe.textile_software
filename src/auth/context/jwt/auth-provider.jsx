@@ -5,6 +5,8 @@ import axios, { endpoints } from 'src/utils/axios';
 
 import { AuthContext } from './auth-context';
 import { setSession, isValidToken } from './utils';
+import { enqueueSnackbar } from 'notistack';
+import { AUTH_API } from '../../../config-global.js';
 
 // ----------------------------------------------------------------------
 /**
@@ -49,28 +51,28 @@ const reducer = (state, action) => {
 
 // ----------------------------------------------------------------------
 
-const STORAGE_KEY = 'accessToken';
+const JWT = 'jwt';
+const JWT_REFRESH = 'jwtRefresh';
 
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const initialize = useCallback(async () => {
     try {
-      const accessToken = sessionStorage.getItem(STORAGE_KEY);
-
-      if (accessToken && isValidToken(accessToken)) {
-        setSession(accessToken);
-
-        const response = await axios.get(endpoints.auth.me);
-
-        const { user } = response.data;
-
+      const jwt = sessionStorage.getItem(JWT);
+      const jwtRefresh = sessionStorage.getItem(JWT_REFRESH);
+      if (jwt && jwtRefresh) {
+        setSession(jwt, jwtRefresh);
+        const url = `${AUTH_API}/me`;
+        const response = await axios.get(url);
+        const user = response?.data?.data;
         dispatch({
           type: 'INITIAL',
           payload: {
             user: {
               ...user,
-              accessToken,
+              jwt,
+              jwtRefresh,
             },
           },
         });
@@ -92,33 +94,45 @@ export function AuthProvider({ children }) {
       });
     }
   }, []);
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
 
   useEffect(() => {
     initialize();
   }, [initialize]);
 
   // LOGIN
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (userName, password) => {
+    console.log('hello');
     const data = {
-      email,
+      userName,
       password,
     };
-
-    const response = await axios.post(endpoints.auth.login, data);
-
-    const { accessToken, user } = response.data;
-
-    setSession(accessToken);
-
-    dispatch({
-      type: 'LOGIN',
-      payload: {
-        user: {
-          ...user,
-          accessToken,
-        },
-      },
-    });
+    const URL = `${AUTH_API}/login`;
+    await axios
+      .post(URL, data)
+      .then((res) => {
+        const user = res?.data?.data;
+        enqueueSnackbar('Login Successfully');
+        const { jwt, jwtRefresh } = user?.other_info;
+        setSession(jwt,jwtRefresh)
+        dispatch({
+          type: 'LOGIN',
+          payload: {
+            user: {
+              ...user,
+              jwt,
+              jwtRefresh,
+            },
+          },
+        });
+      })
+      .catch((err) => {
+        enqueueSnackbar(`${err.message}`, { variant: 'error' });
+        console.log(err);
+      });
   }, []);
 
   // REGISTER
