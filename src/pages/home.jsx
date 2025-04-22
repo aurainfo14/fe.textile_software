@@ -10,7 +10,6 @@ export default function HomePage() {
       <Helmet>
         <title> Minimal: The starting point for your next project</title>
       </Helmet>
-
       {/*<HomeView />*/}
     </>
   );
