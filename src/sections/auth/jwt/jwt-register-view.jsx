@@ -23,8 +23,6 @@ import { AUTH_API, PATH_AFTER_LOGIN } from 'src/config-global';
 import Iconify from 'src/components/iconify';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import Box from '@mui/material/Box';
-import background from '../../../../public/assets/background/register-background-light.png';
-import backgroundDark from '../../../../public/assets/background/register-background-dark.png';
 import { useTheme } from '@mui/material/styles';
 import { useSnackbar } from 'notistack';
 import Dialog from '@mui/material/Dialog';
@@ -34,6 +32,8 @@ import TextField from '@mui/material/TextField';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import axios from 'axios';
+import background from '../../../../public/assets/background/register-background-light.png';
+import backgroundDark from '../../../../public/assets/background/register-background-dark.png';
 // ----------------------------------------------------------------------
 
 export default function JwtRegisterView() {

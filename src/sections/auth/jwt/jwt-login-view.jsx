@@ -23,9 +23,9 @@ import { PATH_AFTER_LOGIN } from 'src/config-global';
 import Iconify from 'src/components/iconify';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
 import background from '../../../../public/assets/background/login-background-light.png';
 import backgroundDark from '../../../../public/assets/background/login-background-dark.png';
-import { useTheme } from '@mui/material/styles';
 // ----------------------------------------------------------------------
 
 export default function JwtLoginView() {
