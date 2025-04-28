@@ -18,22 +18,11 @@ import { useRouter, useSearchParams } from 'src/routes/hooks';
 import { useBoolean } from 'src/hooks/use-boolean';
 
 import { useAuthContext } from 'src/auth/hooks';
-import { AUTH_API, PATH_AFTER_LOGIN } from 'src/config-global';
+import { PATH_AFTER_LOGIN } from 'src/config-global';
 
 import Iconify from 'src/components/iconify';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
-import Box from '@mui/material/Box';
-import { useTheme } from '@mui/material/styles';
-import { useSnackbar } from 'notistack';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import TextField from '@mui/material/TextField';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import axios from 'axios';
-import background from '../../../../public/assets/background/register-background-light.png';
-import backgroundDark from '../../../../public/assets/background/register-background-dark.png';
+
 // ----------------------------------------------------------------------
 
 export default function JwtRegisterView() {
@@ -49,33 +38,18 @@ export default function JwtRegisterView() {
 
   const password = useBoolean();
 
-  const theme = useTheme();
-
-  const { enqueueSnackbar } = useSnackbar();
-
-  const [popupOpen, setPopupOpen] = useState(false);
-
-  const [userName, setUserName] = useState('');
-
   const RegisterSchema = Yup.object().shape({
     firstName: Yup.string().required('First name required'),
-    middleName: Yup.string().required('Middle name required'),
     lastName: Yup.string().required('Last name required'),
-    contact: Yup.string().required('Contact name required'),
-    companyName: Yup.string().required('Company name required'),
     email: Yup.string().required('Email is required').email('Email must be a valid email address'),
     password: Yup.string().required('Password is required'),
   });
 
   const defaultValues = {
     firstName: '',
-    middleName: '',
     lastName: '',
     email: '',
-    contact: '',
-    companyName: '',
     password: '',
-    role:'ADMIN'
   };
 
   const methods = useForm({
@@ -91,59 +65,16 @@ export default function JwtRegisterView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      const URL = `${AUTH_API}/register`;
-      const response = await axios.post(URL, data);
-      console.log(response,"00000");
-      if (response.data.success) {
-        const result = response.data.data;
-        setUserName(result.userName);
-        setPopupOpen(true);
-        enqueueSnackbar(response.data.data.message, { variant: 'success' });
-        reset();
-      }
+      await register?.(data.email, data.password, data.firstName, data.lastName);
+
+      router.push(returnTo || PATH_AFTER_LOGIN);
     } catch (error) {
       console.error(error);
+      reset();
       setErrorMsg(typeof error === 'string' ? error : error.message);
     }
   });
 
-  const handleClosePopup = () => {
-    setPopupOpen(false);
-    router.push(returnTo || PATH_AFTER_LOGIN);
-  };
-  const handleCopyUserName = async () => {
-    if (!userName) {
-      enqueueSnackbar('No username to copy!', { variant: 'warning' });
-      return;
-    }
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard
-        .writeText(userName)
-        .then(() => {
-          enqueueSnackbar('Username copied to clipboard!', { variant: 'success' });
-        })
-        .catch((error) => {
-          console.error('Failed to copy username:', error);
-          enqueueSnackbar('Failed to copy username. Please try again.', { variant: 'error' });
-        });
-    } else {
-      try {
-        const textarea = document.createElement('textarea');
-        textarea.value = userName;
-        textarea.style.position = 'absolute';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        enqueueSnackbar('Username copied to clipboard!', { variant: 'success' });
-      } catch (error) {
-        console.error('Fallback copy failed:', error);
-        enqueueSnackbar('Failed to copy username. Please try again.', { variant: 'error' });
-      }
-    }
-  };
   const renderHead = (
     <Stack spacing={2} sx={{ mb: 5, position: 'relative' }}>
       <Typography variant="h4">Get started absolutely free</Typography>
@@ -182,36 +113,27 @@ export default function JwtRegisterView() {
 
   const renderForm = (
     <Stack spacing={2.5}>
-      <Box
-        rowGap={3}
-        columnGap={2}
-        display="grid"
-        gridTemplateColumns={{
-          xs: 'repeat(1, 1fr)',
-          sm: 'repeat(2, 1fr)',
-        }}
-      >
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <RHFTextField name="firstName" label="First name" />
-        <RHFTextField name="middleName" label="Middle name" />
         <RHFTextField name="lastName" label="Last name" />
-        <RHFTextField name="email" label="Email address" />
-        <RHFTextField name="contact" label="Contact" />
-        <RHFTextField name="companyName" label="Company Name" />
-        <RHFTextField
-          name="password"
-          label="Password"
-          type={password.value ? 'text' : 'password'}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={password.onToggle} edge="end">
-                  <Iconify icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
+      </Stack>
+
+      <RHFTextField name="email" label="Email address" />
+
+      <RHFTextField
+        name="password"
+        label="Password"
+        type={password.value ? 'text' : 'password'}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton onClick={password.onToggle} edge="end">
+                <Iconify icon={password.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+      />
 
       <LoadingButton
         fullWidth
@@ -227,108 +149,20 @@ export default function JwtRegisterView() {
   );
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Blurred Background */}
-      <Box
-        component="img"
-        src={theme.palette.mode === 'light' ? background : backgroundDark}
-        alt="background"
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          zIndex: 0,
-        }}
-      />
+    <>
+      {renderHead}
 
-      {/* Optional Dark Overlay for contrast */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)', // You can change alpha here
-          zIndex: 1,
-        }}
-      />
+      {!!errorMsg && (
+        <Alert severity="error" sx={{ m: 3 }}>
+          {errorMsg}
+        </Alert>
+      )}
 
-      {/* Your Form Container */}
-      <Box
-        sx={{
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-        }}
-      >
-        <Box
-          sx={{
-            width: 700,
-            height: 550,
-            p: 5,
-            borderRadius: 3,
-            backgroundColor: theme.palette.mode === 'light' ? '#ffff' : '#222830',
-          }}
-        >
-          {renderHead}
+      <FormProvider methods={methods} onSubmit={onSubmit}>
+        {renderForm}
+      </FormProvider>
 
-          <FormProvider methods={methods} onSubmit={onSubmit}>
-            {renderForm}
-          </FormProvider>
-          <Dialog open={popupOpen} onClose={handleClosePopup}>
-            <DialogTitle sx={{ textAlign: 'start', fontWeight: 'bold', fontSize: '1.5rem', pb: 0 }}>
-              Registration Successful!
-            </DialogTitle>
-            <DialogContent sx={{ textAlign: 'center', pt: 2 }}>
-              <Box sx={{ mt: 2, width: '400px' }}>
-                <TextField
-                  fullWidth
-                  label="Copy Your Username"
-                  value={userName}
-                  InputProps={{
-                    readOnly: true,
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={handleCopyUserName}>
-                          <Iconify icon="solar:clipboard-bold" />
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    mb: 1,
-                    backgroundColor: '#f4f6f8',
-                    borderRadius: 1,
-                    '& .MuiInputBase-root': { fontWeight: 'bold', color: 'primary.main' },
-                  }}
-                />
-              </Box>
-            </DialogContent>
-            <DialogActions sx={{ justifyContent: 'end', pt: 1.5, pb: 3 }}>
-              <Button
-                onClick={handleClosePopup}
-                variant="contained"
-                sx={{ px: 2, py: 1, fontWeight: 'bold', textTransform: 'uppercase' }}
-              >
-                Close
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </Box>
-      </Box>
-    </Box>
+      {renderTerms}
+    </>
   );
 }

@@ -22,22 +22,15 @@ import { PATH_AFTER_LOGIN } from 'src/config-global';
 
 import Iconify from 'src/components/iconify';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
-import Box from '@mui/material/Box';
-import { useTheme } from '@mui/material/styles';
-import background from '../../../../public/assets/background/login-background-light.png';
-import backgroundDark from '../../../../public/assets/background/login-background-dark.png';
+
 // ----------------------------------------------------------------------
 
 export default function JwtLoginView() {
-
   const { login } = useAuthContext();
 
   const router = useRouter();
 
   const [errorMsg, setErrorMsg] = useState('');
-
-  const theme = useTheme();
-
 
   const searchParams = useSearchParams();
 
@@ -46,13 +39,13 @@ export default function JwtLoginView() {
   const password = useBoolean();
 
   const LoginSchema = Yup.object().shape({
-    userName: Yup.string().required('User name is required'),
+    email: Yup.string().required('Email is required').email('Email must be a valid email address'),
     password: Yup.string().required('Password is required'),
   });
 
   const defaultValues = {
-    userName: '',
-    password: '',
+    email: 'demo@minimals.cc',
+    password: 'demo1234',
   };
 
   const methods = useForm({
@@ -68,11 +61,12 @@ export default function JwtLoginView() {
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await login?.(data.userName, data.password);
+      await login?.(data.email, data.password);
 
       router.push(returnTo || PATH_AFTER_LOGIN);
     } catch (error) {
       console.error(error);
+      reset();
       setErrorMsg(typeof error === 'string' ? error : error.message);
     }
   });
@@ -93,7 +87,7 @@ export default function JwtLoginView() {
 
   const renderForm = (
     <Stack spacing={2.5}>
-      <RHFTextField name="userName" label="User Name" />
+      <RHFTextField name="email" label="Email address" />
 
       <RHFTextField
         name="password"
@@ -128,67 +122,22 @@ export default function JwtLoginView() {
   );
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Blurred Background */}
-      <Box
-        component="img"
-        src={ theme.palette.mode === 'light' ? background : backgroundDark}
-        alt="background"
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          zIndex: 0,
-        }}
-      />
+    <>
+      {renderHead}
 
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          zIndex: 1,
-        }}
-      />
+      <Alert severity="info" sx={{ mb: 3 }}>
+        Use email : <strong>demo@minimals.cc</strong> / password :<strong> demo1234</strong>
+      </Alert>
 
-      <Box
-        sx={{
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-        }}
-      >
-        <Box
-          sx={{
-            width: 400,
-            p: 5,
-            borderRadius: 3,
-            backgroundColor: theme.palette.mode === 'light' ? "#ffff" : '#222830',
-            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          {renderHead}
+      {!!errorMsg && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {errorMsg}
+        </Alert>
+      )}
 
-          <FormProvider methods={methods} onSubmit={onSubmit}>
-            {renderForm}
-          </FormProvider>
-        </Box>
-      </Box>
-    </Box>
+      <FormProvider methods={methods} onSubmit={onSubmit}>
+        {renderForm}
+      </FormProvider>
+    </>
   );
 }
