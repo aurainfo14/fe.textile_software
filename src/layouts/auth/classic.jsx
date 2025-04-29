@@ -1,20 +1,15 @@
 import PropTypes from 'prop-types';
-
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { alpha, useTheme } from '@mui/material/styles';
-
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
-
 import { useResponsive } from 'src/hooks/use-responsive';
-
 import { bgGradient } from 'src/theme/css';
 import { useAuthContext } from 'src/auth/hooks';
-
 import Logo from 'src/components/logo';
 
 // ----------------------------------------------------------------------
@@ -54,9 +49,7 @@ const METHODS = [
 
 export default function AuthClassicLayout({ children, image, title }) {
   const { method } = useAuthContext();
-
   const theme = useTheme();
-
   const mdUp = useResponsive('up', 'md');
 
   const renderLogo = (
@@ -74,10 +67,6 @@ export default function AuthClassicLayout({ children, image, title }) {
       sx={{
         width: 1,
         mx: 'auto',
-        maxWidth: 480,
-        px: { xs: 2, md: 8 },
-        pt: { xs: 15, md: 20 },
-        pb: { xs: 15, md: 0 },
       }}
     >
       {children}
@@ -103,7 +92,6 @@ export default function AuthClassicLayout({ children, image, title }) {
       <Typography variant="h3" sx={{ maxWidth: 480, textAlign: 'center' }}>
         {title || 'Hi, Welcome back'}
       </Typography>
-
       <Box
         component="img"
         alt="auth"
@@ -116,7 +104,6 @@ export default function AuthClassicLayout({ children, image, title }) {
           },
         }}
       />
-
       <Stack direction="row" spacing={2}>
         {METHODS.map((option) => (
           <Tooltip key={option.label} title={option.label}>
@@ -149,9 +136,7 @@ export default function AuthClassicLayout({ children, image, title }) {
       }}
     >
       {renderLogo}
-
       {mdUp && renderSection}
-
       {renderContent}
     </Stack>
   );
